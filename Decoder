@@ -1,0 +1,142 @@
+//Author: Sam Toje
+//Purpose: This program will decode messages received as 12 bit packets. It will read a packet, determine if an error has occured in transmission, fix any error, extract the gray code message, convert to the excess-3 code message, convert the excess-3 to decimal, and print the character. It will repeat for each packet in the file. 
+//Date: 11/21/2020
+
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+	char bit;
+	int message[12];
+	int errorcode[4] = {0, 0, 0, 0};
+	int errorbit;
+	int graycode[8];
+	int binary[8];
+	
+	while(cin >> bit)	
+	{
+	 	message[0] = bit - '0';
+			
+		for(int i = 1; i <12; i++)
+		{		
+			cin >> bit;
+			bit = bit - '0';
+			message[i] = bit;	
+		}	
+		
+		//check for errors in transmission 	
+		if((message[7]+message[8]+message[9]+message[10]+message[11]) % 2 == 1)
+		{	
+			errorcode[0] = 1;
+		}else
+			errorcode[0] = 0;
+
+		if((message[3]+message[4]+message[5]+message[6]+message[11]) % 2 == 1)
+		{
+			errorcode[1] = 1;
+		}else
+			errorcode[1] = 0;
+			
+		if((message[1]+message[2]+message[5]+message[6]+message[9]+message[10]) % 2 == 1)
+		{
+			errorcode[2] = 1;
+		}else
+			errorcode[2] = 0;
+
+		if((message[0]+message[2]+message[4]+message[6]+message[8]+message[10]) % 2 == 1)
+		{	
+			errorcode[3] = 1;
+		}else
+			errorcode[3] = 0;
+
+		//find error bit location if there is error
+		
+		errorbit = 0;
+		int divide = 8;	
+		if(errorcode[0] > 0 || errorcode[1] > 0 || errorcode[2] > 0 || errorcode[3] > 0)
+		{
+			for(int j=0; j < 4; j++)
+			{
+				errorbit = errorbit + (errorcode[j] * divide);
+				divide = divide / 2;
+			}
+		 	
+			//swap if there is error
+			if(errorbit > 0)
+			{
+				if(message[errorbit - 1] == 1)
+				{
+					message[errorbit - 1] = 0;
+			
+				}else if(message[errorbit - 1] == 0)
+				{
+					message[errorbit - 1] = 1;	
+				}
+			}
+		
+			
+		}	
+		divide = 8;
+		
+		//extract gray code		
+		int skip = 0;	
+		for(int a = 0; a < 12; a++)
+		{
+			if( a == 0 || a == 1 || a == 3 || a == 7)
+			{
+				skip++;
+				continue;
+			}
+			graycode[a-skip] = message[a];
+		}
+		
+		//convert gray to binary				
+		int sum = graycode[0];
+		binary[0] = graycode[0];
+		for (int t = 1; t < 8; t++)
+		{
+			if(t == 1)
+			{
+				if(graycode[0] % 2 == 0)
+					binary[t] = graycode[t];
+				else if(graycode[t] == 0)
+					binary[t] = 1;
+				else 
+					binary[t] = 0;
+				continue;
+			}
+
+			if((graycode[t-1] + sum) % 2 == 0){
+				binary[t] = graycode[t];
+			}else if(graycode[t] == 0){
+				binary[t] = 1;
+			}else 
+				binary[t] = 0;
+						
+			sum = sum + graycode[t-1];
+		}
+			
+		//convert binary to decimal
+		int decimal = 0;
+		int multiple = 1;
+		for(int g = 7; g >= 0; g--)
+		{
+			if(binary[g] ==  1)
+				decimal = decimal + (binary[g] * multiple);
+			if(multiple == 0)
+				multiple++;
+			
+			multiple = multiple * 2;
+		}
+			
+		//Modify for Excess-3;
+		decimal = decimal - 3;
+			
+		//Turn the value back into character and print
+		cout <<  static_cast<char>(decimal);	
+	}
+	cout << '\n';
+	return 0;
+}	
