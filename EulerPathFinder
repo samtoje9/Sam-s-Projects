@@ -1,0 +1,115 @@
+//Author: Sam Toje
+//Purpose: This program will read in the number of nodes (less than 10) and an adjacency relation representing a graph. The program will create an adjacency matrix from the adjacency relation. The program	 will then print the adjacency matrix, any isolated nodes, and if any euler paths are present.
+//Date: 10/28/2020
+
+#include<iostream>
+#include<bits/stdc++.h>
+
+using namespace std;
+
+void testeulerpath(int graph[][10], int n)
+{
+		vector<int> numofadj;
+
+		//Find number of edges for each vertex
+		for(int i = 0; i < n; i++)
+		{
+			numofadj.push_back(accumulate(graph[i],graph[i] + 5, 0));
+		}
+			
+		//Find number of odd edges for the vertices
+		int start = 0;
+		int numofodd = 0;
+										
+		for(int i = n - 1; i >= 0; i--)
+		{
+			if(numofadj[i] % 2 == 1)
+			{
+				numofodd = numofodd + 1;
+				start = i;
+			}
+		}
+		stack<int>stack;
+		vector<int>path;
+		int cur = start;
+		
+		while (!stack.empty() or accumulate(graph[cur], graph[cur] + 5, 0) != 0)
+		{
+			if(accumulate(graph[cur],graph[cur] + 5, 0) == 0)
+			{
+				path.push_back(cur);
+				cur = stack.top();
+				stack.pop();
+			}
+			else
+			{
+				for (int i = 0; i < n; i++)
+				{
+					if(graph[cur][i] == 1)
+					{
+						stack.push(cur);
+						graph[cur][i] = 0;
+						graph[i][cur] = 0;
+						cur = i;
+						break;
+					}
+				}
+			}
+		}												  													
+		cout << "\nA euler path exists\n";
+}
+			
+int main()
+{
+	//retrieve number of nodes
+	int nodes;
+	cout << "Please input the number of nodes: ";
+	cin >> nodes;
+	int adj[10][10];
+	memset(adj,0, sizeof(adj));
+	
+	//retrieve the list of relations
+	cout << "Enter the adjacency relations: ";
+	string str;
+	cin.ignore();
+	getline(cin,str);
+
+	for(int i = 0; i < str.size(); i++)
+	{
+		if(str[i] == '{' || str[i] == '}' || str[i] == '(' || str[i] == ')' || str[i] == ',') continue;
+		else
+		{
+			int s,d;
+			s = str[i]-'0';
+			i = i+2; 
+			d = str[i]-'0';
+			
+			adj[s-1][d-1]=1;
+		}
+	}
+
+	cout << "\nThe adjacency list is:" << endl;
+	for(int i = 0; i < nodes; i++)
+	{
+		for(int j = 0; j < nodes; j++)
+		{
+			cout << adj[i][j] << " ";
+		}
+		cout << endl;
+	}
+	
+	cout << "\nThe isolated nodes are: ";
+	for(int i = 0; i < nodes; i++)
+	{
+		int t = 0;
+		for(int j = 0; j < nodes; j++)
+		{
+			if(adj[i][j] == 1){t=1; break;}
+		}
+	
+		if(t == 0) cout << i + 1 << " ";
+	}
+	testeulerpath(adj,nodes);
+	return 0;
+}
+
